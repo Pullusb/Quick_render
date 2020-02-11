@@ -1,8 +1,10 @@
-# Quick_render
+# Quick render
 
 Blender addon - Render and save view/cam in one click
 
 **[Download latest](https://github.com/Pullusb/Quick_render/archive/master.zip)**
+
+Want to support ? [Check out how](http://www.samuelbernou.fr/donate)
 
 ---
 
@@ -13,7 +15,7 @@ Press a button and it's exported, you didn't name anything ? fine, you can but d
   
 
 #### First use case exemple:  
-You have the realisator/client/bossman/whatever behind you that navigate with you in the scene to extract some reference views.  
+You have the realisator/client/bossman/whatever behind you, guiding your navigation in the scene to extract some references views.  
 
 BOSS: This point of view is nice can you export the..  
 YOU: \[_click_\] Done.  
@@ -35,25 +37,25 @@ it's done.
 
 **Save folder** : If not specified, create a 'quick_render' directory aside blend location and export inside
 
-**Filename** : If not specified get a template name 'view_...'.  
-Image will never be overwritten, Always save while incrementing name 
+**Filename** : If not specified get a placeholder name like 'view_01'.  
+Image will never be overwritten, always save while auto incrementing name 
 You can use padding number like "my-beloved-cube_###", if not specified, automatic padding is 2 digits 
 
-Exemple with name beloved-cube
+Exemples with name : beloved-cube
 
 **insert date** : beloved-cube\_2020-02-11
 
 **insert frame**: beloved\_cube\_0250
 
-Both  : beloved\_cube\_2020-02-11\_0250 (starting to get confusing)
+**Both** : beloved\_cube\_2020-02-11\_0250 (starting to get confusing)
 
-last button open export directory.
+**open export directory** : Well... it open's it.
 
 
 
 ## Todo:
 
-- "True Render" from view button
+- "True Render" from a render view button
     
 - Setup user preferences for defaults values (default placeholder, date format, auto-padding)
 
