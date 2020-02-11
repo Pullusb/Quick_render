@@ -22,7 +22,7 @@ bl_info = {
     "name": "Quick render",
     "description": "Quickly Render/openGL from view/cam and save image",
     "author": "Samuel Bernou",
-    "version": (1, 0, 1),
+    "version": (1, 0, 2),
     "blender": (2, 80, 0),
     "location": "3D viewport > N bar > View tab > Quick render",
     "warning": "",
@@ -56,12 +56,12 @@ def openFolder(folderpath):
     myOS = platform
     if myOS.startswith('linux') or myOS.startswith('freebsd'):
         # linux
-        cmd = 'xdg-open '
+        cmd = 'xdg-open'
         #print("operating system : Linux")
     elif myOS.startswith('win'):
         # Windows
         #cmd = 'start '
-        cmd = 'explorer '
+        cmd = 'explorer'
         #print("operating system : Windows")
         if not folderpath:
             return('/')
@@ -69,7 +69,7 @@ def openFolder(folderpath):
     else:#elif myOS == "darwin":
         # OS X
         #print("operating system : MACos")
-        cmd = 'open '
+        cmd = 'open'
 
     if not folderpath:
         return('//')
@@ -247,6 +247,7 @@ class QRD_OT_open_export_folder(bpy.types.Operator):
         dest = bpy.path.abspath(dest)
         if not exists(dest):
             dest = dirname(dest)
+            mess = f'Not exists {dest}'
             self.report({'WARNING'}, mess)#WARNING
         
         if not exists(dest):#open parent folder (tolerance mode)
