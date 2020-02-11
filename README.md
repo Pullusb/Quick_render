@@ -12,37 +12,50 @@ The goal is simple : Be able to export view snapshots in 3D view and iterate qui
 Press a button and it's exported, you didn't name anything ? fine, you can but don't have to.  
   
 
-First use case exemple :  
+#### First use case exemple:  
 You have the realisator/client/bossman/whatever behind you that navigate with you in the scene to extract some reference views.  
 
-The guy : This point of view is nice can you export the..  
-You : \[click\] Done.  
-The guy : huuu ok... \[Look at you navigating...\] Ah! This view is cool too mayb..  
-You : \[click\] Done !  
-The guy : ...and this slight different angle is...  
-You : \[click\] Doooone !!  
-The guy : \[suspicious\] What ?! huu ooooookaay... you sure ?  
-You : \[click (showing exported file)\] Yep, there.  
-The guy : \[whispering to himself\] Wow that was way too fast ! What a pro, I admire him so much, lets make HIM the boss, oh yeah !  
-You : \[Getting a big head\] Yup... thats me ! (hint : you shouln't say that last line, it totally breaks the hype... Trust me).  
+BOSS: This point of view is nice can you export the..  
+YOU: \[_click_\] Done.  
+BOSS: huuu ok... \[_Look at you navigating..._\] Stop ! This view is cool too mayb..  
+YOU: \[_click_\] Done !  
+BOSS: ...and this slight different angle is...  
+YOU: \[_click_\] Dooone !!  
+BOSS: \[_suspicious_\] What ?! huuu ooooookaay... you sure ?  
+YOU: \[_click (showing exported file)_\] Yep, there.  
+BOSS: \[_whispering to himself_\] Wow that was way too fast ! What a pro, I admire him so much, lets make HIM the boss, oh yeah !  
+YOU: \[_Getting a big head_\] Yup... thats me ! (hint: this last line totally breaks the hype... Trust me).  
   
-Second use case (solo) :  
-You : \[thinking nervously\] I need this render out now !... Quick ! I'll have to press F12 then Alt+S, navigate to saving location (probably aside blend file !) then choose a name and Oh wait!...  
+#### Second use case (solo):  
+You: \[_thinking nervously_\] I need this render out now !... Quick ! I'll have to press F12 then Alt+S, navigate to saving location (probably aside blend file !) then choose a name and Oh wait!...  
 it's done.
 
 
-### options: 
+### options details: 
 
-In the name field you can use padding number like "my-beloved-cube_##"
+**Save folder** : If not specified, create a 'quick_render' directory aside blend location and export inside
+
+**Filename** : If not specified get a template name 'view_...'.  
+Image will never be overwritten, Always save while incrementing name 
+You can use padding number like "my-beloved-cube_###", if not specified, automatic padding is 2 digits 
+
+Exemple with name beloved-cube
+
+**insert date** : beloved-cube\_2020-02-11
+
+**insert frame**: beloved\_cube\_0250
+
+Both  : beloved\_cube\_2020-02-11\_0250 (starting to get confusing)
+
+last button open export directory.
 
 
 
 ## Todo:
 
-
 - "True Render" from view button
     
-- Setup user preferences for defaults values
+- Setup user preferences for defaults values (default placeholder, date format, auto-padding)
 
 - When user use his own padding '####', behavior is totally different with date/frame infos insertion. Check how to make this consistent
 

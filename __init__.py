@@ -22,7 +22,7 @@ bl_info = {
     "name": "Quick render",
     "description": "Quickly Render/openGL from view/cam and save image",
     "author": "Samuel Bernou",
-    "version": (1, 0, 0),
+    "version": (1, 0, 1),
     "blender": (2, 80, 0),
     "location": "3D viewport > N bar > View tab > Quick render",
     "warning": "",
@@ -117,7 +117,7 @@ def add_count(name, count, pad = 2):
 class QRD_OT_render_view(bpy.types.Operator):
     bl_idname = "render.qv_render_ops"
     bl_label = "Quick view render"
-    bl_description = "Render operator"
+    bl_description = "Render/openGL view/cam"
     bl_options = {"REGISTER"}
 
     rendermode : bpy.props.IntProperty()
@@ -185,7 +185,9 @@ class QRD_OT_render_view(bpy.types.Operator):
             filename = add_count(name, ct)
             
             if ct >= stop:#hard num limiter
-                break
+                self.report({'ERROR'}, 'Reach Hardcoded limit of files to increment in this quick render directory')#WARNING, ERROR
+                return {"CANCELLED"}
+                # break
 
         fp = normpath(join(dest, filename))
         # print(filename)
