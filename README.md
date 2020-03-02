@@ -66,12 +66,12 @@ The button render view create a camera at current view before render to make a "
 ## changelog:
 
 2020-03-03 (1,1,0):  
-    - new button to make a "true" render from view (Create a cam with same name as the file cans place it in a "quick_cams" collections)
-            opt for later : "only cam" or "no render" (appear, or enable when you tick, "create cam") just create the cam
-            opt for later : "use cam name" if already in cam, output the name of the cam ? (with suffixes...)
-    - User preferences for defaults values (default placeholder, date format, auto-padding, name normalization)
+- new button to make a "true" render from view (Create a cam with same name as the file cans place it in a "quick_cams" collections)
+    - opt for later : "only cam" or "no render" (appear, or enable when you tick, "create cam") just create the cam
+    - opt for later : "use cam name" if already in cam, output the name of the cam ? (with suffixes...)
+- User preferences for defaults values (default placeholder, date format, auto-padding, name normalization)
 
 2020-02-11 (1, 0, 3):  
-    - fix open folder bug
-    - removed openGl render though cam button, appears in solid mode only with aview_context False :
-    render.opengl(animation=False, sequencer=False, write_still=True, view_context=False)
+- fix open folder bug
+- removed openGl render though cam button, appears in solid mode only with aview_context False :  
+render.opengl(animation=False, sequencer=False, write_still=True, view_context=False)
