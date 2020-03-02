@@ -22,8 +22,8 @@ bl_info = {
     "name": "Quick render",
     "description": "Quickly Render/openGL from view/cam and save image",
     "author": "Samuel Bernou",
-    "version": (1, 0, 2),
-    "blender": (2, 80, 0),
+    "version": (1, 1, 0),
+    "blender": (2, 82, 0),
     "location": "3D viewport > N bar > View tab > Quick render",
     "warning": "",
     "wiki_url": "https://github.com/Pullusb/Quick_render",
@@ -39,14 +39,56 @@ from sys import platform
 import subprocess
 
 # TODO :
-# Store trigerred view history of each render (maybe with a unique ID number + auto name given) as UI list
-# (exportable - loadable as json ?)
-# add an option to create camera at current view (matrix)...
-
-# This way the user can Go back to a view with history (if real/client/bossman thinks this export is cool) and place a cam on this view
-# slightly overkill but I like it !
-
 # quick options (addon prefs or 2/3 preset)
+
+
+def get_addon_prefs():
+    '''
+    function to read current addon preferences properties
+
+    access a prop like this :
+    prefs = get_addon_prefs()
+    option_state = prefs.super_special_option
+
+    oneliner : get_addon_prefs().super_special_option
+    '''
+    import os 
+    addon_name = os.path.splitext(__name__)[0]
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons[addon_name].preferences
+    return (addon_prefs)
+
+def set_collection(ob, collection, unlink=True) :
+    ''' link an object in a collection and create it if necessary, if unlink object is removed from other collections'''
+    scn     = bpy.context.scene
+    col     = None
+    visible = False
+    linked  = False
+
+    # check if collection exist or create it
+    for c in bpy.data.collections :
+        if c.name == collection : col = c
+    if not col : col = bpy.data.collections.new(name=collection)
+
+    # link the collection to the scene's collection if necessary
+    for c in scn.collection.children :
+        if c.name == col.name : visible = True
+    if not visible : scn.collection.children.link(col)
+
+    # check if the object is already in the collection and link it if necessary
+    for o in col.objects :
+        if o == ob : linked = True
+    if not linked : col.objects.link(ob)
+
+    # remove object from scene's collection
+    for o in scn.collection.objects :
+        if o == ob : scn.collection.objects.unlink(ob)
+
+    # if unlink flag we remove the object from other collections
+    if unlink :
+        for c in ob.users_collection :
+            if c.name != collection : c.objects.unlink(ob)
+
 
 def openFolder(folderpath):
     """
@@ -82,8 +124,89 @@ def openFolder(folderpath):
     subprocess.Popen(fullcmd)
     return ' '.join(fullcmd)#back to string to return and print
 
+def view3d_find():
+    for area in bpy.data.window_managers[0].windows[0].screen.areas:
+        if area.type == 'VIEW_3D':
+            v3d = area.spaces[0]
+            rv3d = v3d.region_3d
+            for region in area.regions:
+                if region.type == 'WINDOW':
+                    return area, region, rv3d
+    return None, None, None
+
+def get_view_origin_position():
+    '''get view vector location (or matrix)'''
+    ## method 1
+    # from bpy_extras import view3d_utils
+    # region = bpy.context.region
+    # rv3d = bpy.context.region_data
+    # view_loc = view3d_utils.region_2d_to_origin_3d(region, rv3d, (region.width/2.0, region.height/2.0))
+    # print("view_loc1", view_loc)#Dbg
+
+    ## method 2
+    r3d = bpy.context.space_data.region_3d
+    view_loc2 = r3d.view_matrix.inverted()#.translation
+    # print("view_loc2", view_loc2)#Dbg
+
+    return view_loc2
+
+
+def create_cam_at_view(name):
+    '''Instanciate a camera at viewpoint and render'''
+    warn = []
+    cam = bpy.context.scene.camera
+    
+    area = bpy.context.area
+    region = bpy.context.region
+    # w, h = region.width, region.height
+    
+    rv3d = bpy.context.region_data
+    view_matrix = rv3d.view_matrix.inverted()
+    # view_matrix = get_view_origin_position()
+    print(f'is_perspective : {rv3d.is_perspective}')
+    print(f'perspective : {rv3d.view_perspective}')
+
+    
+    mode = 'free'
+    
+    '''Check if already in a cam view...# Not woking, don't know how to check if in cam !
+    if cam:
+        print('cam: ', cam.name)
+        cam_matrix = cam.matrix_world
+
+        ### CHECK if in cam view (must be a prop...)!
+        if view_matrix == cam_matrix:
+            # print('In camera view')
+            mode = 'cam'
+            # Just render classic and return
+            bpy.ops.render.render(animation=False, write_still=True)
+            return
+    '''
+    # print("in free navigation")
+    
+    lens = area.spaces[0].lens
+    if cam:
+        if cam.data.lens != lens:
+            warn.append(f'Different Focal length for active camera ({cam.data.lens}) and view ({lens})')
+    
+    #create new cam
+    camdata = bpy.data.cameras.new('quickcam_'+ name)
+    qcam = bpy.data.objects.new(name, camdata)
+    # bpy.context.scene.collection.objects.link(qcam)
+    set_collection(qcam, 'quick_cams')
+    
+    qcam.matrix_world = rv3d.view_matrix.inverted()# In one session there was a bug where rotation was Ok but not translation...
+    qcam.location = rv3d.view_matrix.inverted().to_translation()
+    bpy.context.scene.camera = qcam
+
+    # Add a camera with (copy active cam settings ? better copy USER VIEW SETTINGS)
+    camdata.lens = lens #use viewer lens
+
+    return warn
+
 def ensure_delimiter(name):
     '''Return passed string with a trailing "_" if no ending delimiter found, else return unchanged'''
+    if name == '': return name
     if not name.endswith(('.', '-', '_')):
         name += '_'
     return name
@@ -124,12 +247,13 @@ class QRD_OT_render_view(bpy.types.Operator):
 
     def execute(self, context):
         
-        # NOTE : Can use unique ID with date format ! : strftime(%Y%m%d%H%M%S)
-
+        # NOTE : Can use unique ID with date format ! : strftime()
+        pref = get_addon_prefs()
         # user pref option for later
-        placeholder = "view"
-        date_format = r"%Y-%m-%d"#year-month-day
-
+        
+        placeholder = pref.placeholder
+        date_format = pref.timestring
+        userpad = pref.padding
         C = bpy.context
         scn = scene = context.scene
 
@@ -148,33 +272,32 @@ class QRD_OT_render_view(bpy.types.Operator):
 
         name = bpy.context.scene.qrd_filename
 
-        # Normalize (space to underscore) (TODO, make an option (user pref ?))
-        name = name.replace(' ', '_')
+        if pref.normalize:
+            name = name.replace(' ', '_')
 
-        # date_format = r"%d-%H-%M"#-%S day, hours, minutes #seconds
 
-        if not name:
-            name = placeholder
+        if not name and not scn.qrd_insert_date and not scn.qrd_insert_frame:
+            name = 'view'
 
         if scn.qrd_insert_date:
             name = ensure_delimiter(name) + strftime(date_format)
 
         if scn.qrd_insert_frame:
-            name = ensure_delimiter(name) + str(scn.frame_current).zfill(4)
+            name = ensure_delimiter(name) + 'f' + str(scn.frame_current).zfill(4)
 
         
         fl = [splitext(i)[0] for i in listdir(dest)]
 
         filename = name#original output name
 
-        ct = 1#skip 01 and go direct to 02 (option always add count, even on first ? I dont like it if you want to name each of your export...)
+        ct = 1#skip 01 and go direct to 02 (option to force always add count, even on first. dont like it, you may want to name each of your export...)
             
         if '#' in name:#padded
             # always number this from the first
-            filename = add_count(name, 1)#first output name have number 1
+            filename = add_count(name, 1, pad = userpad)#first output name have number 1
 
         else:#not padded
-            first = add_count(name, 1)#skip 01 (if was manually renamed) 
+            first = add_count(name, 1, pad = userpad)#skip 01 (if was manually renamed) 
             if first in fl:
                 filename = first # if a 1 exists avoid exporting version 0 (without number)
 
@@ -182,7 +305,7 @@ class QRD_OT_render_view(bpy.types.Operator):
         while filename in fl:
             ct += 1
             # filename = f'{name}_{str(ct).zfill(2)}'#simple version
-            filename = add_count(name, ct)
+            filename = add_count(name, ct, pad = userpad)
             
             if ct >= stop:#hard num limiter
                 self.report({'ERROR'}, 'Reach Hardcoded limit of files to increment in this quick render directory')#WARNING, ERROR
@@ -200,18 +323,18 @@ class QRD_OT_render_view(bpy.types.Operator):
         if self.rendermode == 0:#OGL view
             bpy.ops.render.opengl(animation=False, sequencer=False, write_still=True, view_context=True)
 
-        elif self.rendermode == 1:#OGL CAM
+        elif self.rendermode == 1:#OGL CAM # always render as solid view... so better use view render mode...
             bpy.ops.render.opengl(animation=False, sequencer=False, write_still=True, view_context=False)
         
-        # else:
-        #     bpy.ops.render.render(animation=False, write_still=True)#, layer="", scene=""
         
         elif self.rendermode == 2:
-            # Add a camera with (copy active cam settings ? better copy user view settings)
-            # Put user view matrix  camera matrix
-            # option to create camera from view
-            # 
-            bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)#, layer="", scene=""
+            warn = create_cam_at_view(filename)
+            if warn:
+                mess = '\n'.join(warn)
+                self.report({'WARNING'}, mess)#WARNING, ERROR
+            
+            bpy.ops.render.render(animation=False, write_still=True)
+            # bpy.ops.render.render(animation=False, write_still=True, use_viewport=True)#, layer="", scene=""
         
         elif self.rendermode == 3:
             bpy.ops.render.render(animation=False, write_still=True)#, layer="", scene=""
@@ -241,8 +364,10 @@ class QRD_OT_open_export_folder(bpy.types.Operator):
             else:
                 # bpy.app.tempdir -> temporary dir use by this session only
                 dest = join(bpy.context.preferences.filepaths.temporary_directory, foldername)
-            # if not exists(dest):
-            #     os.mkdir(dest)
+            """if not exists(dest):
+                dest = dirname(dest)
+            if not exists(dest):
+                return {'CANCELLED'} """
 
         dest = bpy.path.abspath(dest)
         if not exists(dest):
@@ -284,22 +409,81 @@ class QRD_PT_quickrenderbuttons(bpy.types.Panel):
         layout.label(text='OpenGL render')
         row = layout.row(align=False)
         row.operator("render.qv_render_ops", text='openGl view', icon='RENDER_STILL').rendermode = 0
-        row.operator("render.qv_render_ops", text='openGl cam', icon='RESTRICT_RENDER_OFF').rendermode = 1
+        # row.operator("render.qv_render_ops", text='openGl cam', icon='RESTRICT_RENDER_OFF').rendermode = 1# openGL forced trough cam Always appear as solid... remove button for now
 
         layout = self.layout
         layout.label(text='Render')
         row = layout.row(align=False)
-        # row.operator("render.qv_render_ops", text='render view', icon='RENDER_STILL').rendermode = 2
+        row.operator("render.qv_render_ops", text='render view', icon='RENDER_STILL').rendermode = 2
         row.operator("render.qv_render_ops", text='render cam', icon='OUTLINER_OB_CAMERA').rendermode = 3
         layout.separator()
         layout.operator("render.qv_open_loc", icon='OUTPUT')#text='render cam', FILE_FOLDER, OUTPUT (print like images)
 
+
+class QRD_addon_pref(bpy.types.AddonPreferences):
+    bl_idname = __name__
+    #some_bool_prop to display in the addon pref
+
+    normalize : bpy.props.BoolProperty(
+        name='Normalize filename (space to underscore)',
+        description="convert any space in filename to '_'",
+        default=True)
+
+    padding : bpy.props.IntProperty(
+        name="number padding", 
+        description="Padding number to use when filename already exists (ex: 2 = view_05, 3 = view_005)", 
+        default=2, min=1, max=6, soft_min=1, soft_max=4, step=1)
+
+    placeholder : bpy.props.StringProperty(
+        name="placeholder", 
+        description="filename to use when nothing is specified in UI filename field\nHint: This field empty with 'insert date' enabled will write date only", 
+        default="view")
+
+    timestring : bpy.props.StringProperty(
+        name="date  format", 
+        description="define a specific time format for the date string", 
+        default="%Y-%m-%d_%H-%M-%S")
+
+    def draw(self, context):
+            layout = self.layout
+
+            ## some 2.80 UI options
+            layout.use_property_split = True
+            flow = layout.grid_flow(row_major=False, columns=0, even_columns=True, even_rows=False, align=False)
+            layout = flow.column()
+            
+            layout.prop(self, "placeholder")
+            layout.separator()
+            layout.prop(self, "padding")
+            layout.separator()
+            layout.prop(self, "normalize")
+            layout.separator()
+            layout.prop(self, "timestring")
+            layout.label(text='Date format is defining how to write current time, exemples:')
+            # layout.label(text='')
+            layout.label(text='%Y-%m-%d_%H-%M-%S (default)')
+            layout.label(text='2020-03-02_23-19-55 (year-month-day_hour-min-seconds)')
+            layout.separator()
+            layout.label(text='%Y-%m-%d')
+            layout.label(text='2020-03-02 (year-month-day)')
+            layout.separator()
+            layout.label(text='%d-%H-%M-%S')
+            layout.label(text='02-23-19-55 (day-hours-minutes-seconds)')
+            layout.separator()
+            layout.label(text='%Y%m%d%H%M%S')
+            layout.label(text='20200302231955 (compacted year,month,day,hours,minutes,seconds)')
+            layout.separator()
+            layout.operator("wm.url_open", text="Link to more detail on time format").url = "https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes"
+
+
+### register ===
+
 classes = (
+    QRD_addon_pref,
     QRD_OT_render_view,
     QRD_PT_quickrenderbuttons,
     QRD_OT_open_export_folder
 )
-
 def register():
     #add one for path
     bpy.types.Scene.qrd_filename = bpy.props.StringProperty(description="The filename used for export. You can leave it empty\nYou can specify padding e.g: flashrender_###")#(use template set in your user preferences)

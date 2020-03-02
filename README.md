@@ -37,35 +37,42 @@ it's done.
 
 **Save folder** : If not specified, create a 'quick_render' directory aside blend location and export inside
 
-**Filename** : If not specified get a placeholder name like 'view_01'.  
+**Filename** : If not specified get a placeholder name like 'view_01' (placeholder can be customised in addon preference).  
+
 Image will never be overwritten, always save while auto incrementing name 
-You can use padding number like "my-beloved-cube_###", if not specified, automatic padding is 2 digits 
+You can use padding number like "my-beloved-cube_###", if not specified, automatic padding is 2 digits
 
 Exemples with name : beloved-cube
 
-**insert date** : beloved-cube\_2020-02-11
+**insert date** : beloved-cube\_2020-02-11\_20-35-46 (date format can be customised in addon preference)
 
-**insert frame**: beloved\_cube\_0250
+**insert frame**: beloved-cube\_f0250
 
-**Both** : beloved\_cube\_2020-02-11\_0250 (starting to get confusing)
+**Both** : beloved-cube\_2020-02-11\_20-35-46\_f0250 (starting to get confusing)
 
 **open export directory** : Well... it open's it.
 
+The button render view create a camera at current view before render to make a "real" render
 
 
 ## Todo:
 
-- "True Render" from a render view button
+- Check if already in a cam view for view render (create a camera overlapping with current camera)
+
+- When user use his own padding '####' in name, behavior is different with date/frame infos insertion. Check how to make this consistent
+
+---
+
+## changelog:
+
+2020-03-03 (1,1,0):
+    - new button to make a "true" render from view (Create a cam with same name as the file cans place it in a "quick_cams" collections)
+            opt for later : "only cam" or "no render" (appear, or enable when you tick, "create cam") just create the cam
+            opt for later : "use cam name" if already in cam, output the name of the cam ? (with suffixes...)
     
-- Setup user preferences for defaults values (default placeholder, date format, auto-padding)
+    - User preferences for defaults values (default placeholder, date format, auto-padding, name normalization)
 
-- When user use his own padding '####', behavior is totally different with date/frame infos insertion. Check how to make this consistent
-
-- Add an option to create camera at current view (using view matrix and simple hacks)...
-
-Optional
-
-- View History:
-    Store trigerred view history of each render (maybe with a unique ID number + auto name given) as UI list
-    This way the user can Go back to a view with history (if realisator/client/bossman thinks this export is cool) and place a cam on this view
-    A bit overkill but I like it !
+2020-02-11 (1, 0, 3):
+    - fix open folder bug
+    - removed openGl render though cam button, appears in solid mode only with aview_context False :
+    render.opengl(animation=False, sequencer=False, write_still=True, view_context=False)
