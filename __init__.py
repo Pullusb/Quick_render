@@ -22,7 +22,7 @@ bl_info = {
     "name": "Quick render",
     "description": "Quickly Render/openGL from view/cam and save image",
     "author": "Samuel Bernou",
-    "version": (1, 1, 0),
+    "version": (1, 1, 1),
     "blender": (2, 82, 0),
     "location": "3D viewport > N bar > View tab > Quick render",
     "warning": "",
@@ -37,9 +37,6 @@ from os.path import join, dirname, basename, exists, isfile, isdir, splitext, no
 from time import strftime
 from sys import platform
 import subprocess
-
-# TODO :
-# quick options (addon prefs or 2/3 preset)
 
 
 def get_addon_prefs():
@@ -254,6 +251,8 @@ class QRD_OT_render_view(bpy.types.Operator):
         placeholder = pref.placeholder
         date_format = pref.timestring
         userpad = pref.padding
+        mask_cams = pref.mask_cams
+
         C = bpy.context
         scn = scene = context.scene
 
@@ -339,7 +338,9 @@ class QRD_OT_render_view(bpy.types.Operator):
         elif self.rendermode == 3:
             bpy.ops.render.render(animation=False, write_still=True)#, layer="", scene=""
         
-
+        qc_viewlayer_col = C.scene.view_layers['View Layer'].layer_collection.children.get('quick_cams')
+        if mask_cams:
+            if qc_viewlayer_col: qc_viewlayer_col.exclude = True
         #reset
         scn.render.filepath = org
 
@@ -429,6 +430,11 @@ class QRD_addon_pref(bpy.types.AddonPreferences):
         description="convert any space in filename to '_'",
         default=True)
 
+    mask_cams : bpy.props.BoolProperty(
+        name='Mask generated cameras',
+        description="Disable the 'quick_cams' collection when a camera is generated to render a view",
+        default=True)
+
     padding : bpy.props.IntProperty(
         name="number padding", 
         description="Padding number to use when filename already exists (ex: 2 = view_05, 3 = view_005)", 
@@ -455,6 +461,8 @@ class QRD_addon_pref(bpy.types.AddonPreferences):
             layout.prop(self, "placeholder")
             layout.separator()
             layout.prop(self, "padding")
+            layout.separator()
+            layout.prop(self, "mask_cams")
             layout.separator()
             layout.prop(self, "normalize")
             layout.separator()

@@ -57,13 +57,20 @@ The button render view create a camera at current view before render to make a "
 
 ## Todo:
 
-- Check if already in a cam view for view render (create a camera overlapping with current camera)
+- Find a way to check if already in a cam view for _view render_ (currently create a camera overlapping with active)
 
 - When user use his own padding '####' in name, behavior is different with date/frame infos insertion. Check how to make this consistent
+
+- maybe add option to use blender filename
+
+- add error message if in orthographic view
 
 ---
 
 ## changelog:
+
+2020-03-03 (1,1,1):
+- add camera collection masking option
 
 2020-03-03 (1,1,0):  
 - new button to make a "true" render from view (Create a cam with same name as the file cans place it in a "quick_cams" collections)
