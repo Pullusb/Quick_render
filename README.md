@@ -4,6 +4,8 @@ Blender addon - Render and save view/cam in one click
 
 **[Download latest](https://github.com/Pullusb/Quick_render/archive/master.zip)**
 
+### [Demo Youtube](https://youtu.be/T2IIkYmQ9wQ)
+
 Want to support ? [Check out how](http://www.samuelbernou.fr/donate)
 
 ---
