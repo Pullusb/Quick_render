@@ -22,7 +22,7 @@ bl_info = {
     "name": "Quick render",
     "description": "Quickly Render/openGL from view/cam and save image",
     "author": "Samuel Bernou",
-    "version": (1, 1, 1),
+    "version": (1, 2, 0),
     "blender": (2, 82, 0),
     "location": "3D viewport > N bar > View tab > Quick render",
     "warning": "",
@@ -33,6 +33,7 @@ bl_info = {
 import bpy
 import os, re
 from os import listdir
+from pathlib import Path
 from os.path import join, dirname, basename, exists, isfile, isdir, splitext, normpath
 from time import strftime
 from sys import platform
@@ -256,20 +257,22 @@ class QRD_OT_render_view(bpy.types.Operator):
         C = bpy.context
         scn = scene = context.scene
 
-        dest = bpy.context.scene.qrd_savepath
+        dest = context.scene.qrd_savepath
         if not dest:
             foldername = 'quick_render'
             if bpy.data.is_saved:
                 dest = join(dirname(bpy.data.filepath), foldername)
             else:
                 # bpy.app.tempdir -> temporary dir use by this session only
-                dest = join(bpy.context.preferences.filepaths.temporary_directory, foldername)
+                dest = join(context.preferences.filepaths.temporary_directory, foldername)
             if not exists(dest):
                 os.mkdir(dest)
 
         dest = bpy.path.abspath(dest)
 
-        name = bpy.context.scene.qrd_filename
+        name = context.scene.qrd_filename
+        if bpy.data.is_saved and context.scene.qrd_use_blend_name:
+            name = Path(bpy.data.filepath).stem
 
         if pref.normalize:
             name = name.replace(' ', '_')
@@ -400,8 +403,13 @@ class QRD_PT_quickrenderbuttons(bpy.types.Panel):
 
         #row = layout.split(align=True,percentage=0.5)
 
-        layout.prop(context.scene, 'qrd_savepath', text='save folder')
-        layout.prop(context.scene, 'qrd_filename', text='filename')
+        layout.prop(context.scene, 'qrd_savepath', text='Save Folder')
+        
+        col = layout.column()
+        col.prop(context.scene, 'qrd_filename', text='Filename')
+        col.enabled = not context.scene.qrd_use_blend_name
+
+        layout.prop(context.scene, 'qrd_use_blend_name')
 
         row = layout.row(align=False)
         row.prop(context.scene, 'qrd_insert_date')
@@ -495,9 +503,10 @@ classes = (
 def register():
     #add one for path
     bpy.types.Scene.qrd_filename = bpy.props.StringProperty(description="The filename used for export. You can leave it empty\nYou can specify padding e.g: flashrender_###")#(use template set in your user preferences)
+    bpy.types.Scene.qrd_use_blend_name = bpy.props.BoolProperty(name="Use Blend Name", default=False, description="Use current blend filename for export")
     bpy.types.Scene.qrd_savepath = bpy.props.StringProperty(subtype='DIR_PATH', description="Export location, if not specify, create a 'quick_render' directory aside blend location")#(change defaut name in user_prefernece)
-    bpy.types.Scene.qrd_insert_date = bpy.props.BoolProperty(name="insert date", default=False, description="Insert the date as suffix in filename\ne.g.: beloved-cube_2020-02-11")
-    bpy.types.Scene.qrd_insert_frame = bpy.props.BoolProperty(name="insert frame", default=False, description="Insert the frame number as suffix in filename\ne.g: beloved_cube_0250\n(or with date : beloved_cube_2020-02-11_0250)")
+    bpy.types.Scene.qrd_insert_date = bpy.props.BoolProperty(name="Insert Date", default=False, description="Insert the date as suffix in filename\ne.g.: beloved-cube_2020-02-11")
+    bpy.types.Scene.qrd_insert_frame = bpy.props.BoolProperty(name="Insert Frame", default=False, description="Insert the frame number as suffix in filename\ne.g: beloved_cube_0250\n(or with date : beloved_cube_2020-02-11_0250)")
     for cls in classes:
         bpy.utils.register_class(cls)
 

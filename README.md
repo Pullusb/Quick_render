@@ -41,18 +41,20 @@ it's done.
 
 **Filename** : If not specified get a placeholder name like 'view_01' (placeholder can be customised in addon preference).  
 
+**User Blend Name** : Disable the Filename field and use currrent blend's name
+
 Image will never be overwritten, always save while auto incrementing name 
 You can use padding number like "my-beloved-cube_###", if not specified, automatic padding is 2 digits
 
 Exemples with name : beloved-cube
 
-**insert date** : beloved-cube\_2020-02-11\_20-35-46 (date format can be customised in addon preference)
+**Insert Date** : beloved-cube\_2020-02-11\_20-35-46 (date format can be customised in addon preference)
 
-**insert frame**: beloved-cube\_f0250
+**Insert Frame**: beloved-cube\_f0250
 
 **Both** : beloved-cube\_2020-02-11\_20-35-46\_f0250 (starting to get confusing)
 
-**open export directory** : Well... it open's it.
+**Open Export Directory** : Well... it open's it.
 
 The button render view create a camera at current view before render to make a "real" render
 
@@ -63,13 +65,16 @@ The button render view create a camera at current view before render to make a "
 
 - When user use his own padding '####' in name, behavior is different with date/frame infos insertion. Check how to make this consistent
 
-- maybe add option to use blender filename
 
 - add error message if in orthographic view
 
 ---
 
 ## changelog:
+
+
+2020-10-09 (1,2,0):
+- add option to use blender filename
 
 2020-03-03 (1,1,1):
 - add camera collection masking option
