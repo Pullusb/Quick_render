@@ -27,8 +27,8 @@ BOSS: ...and this slight different angle is...
 YOU: \[_click_\] Dooone !!  
 BOSS: \[_suspicious_\] What ?! huuu ooooookaay... you sure ?  
 YOU: \[_click (showing exported file)_\] Yep, there.  
-BOSS: \[_whispering to himself_\] Wow that was way too fast ! What a pro, I admire him so much, lets make HIM the boss, oh yeah !  
-YOU: \[_Getting a big head_\] Yup... thats me ! (hint: this last line totally breaks the hype... Trust me).  
+BOSS: \[_whispering to himself_\] Those computers are becoming very powerful, I will soon be able to get rid of this arsehole.  
+YOU: \[_Daydreaming about the public employment service_\] Yup... thats me ! (hint: this last line totally breaks the hype... Trust me).  
   
 #### Second use case (solo):  
 You: \[_thinking nervously_\] I need this render out now !... Quick ! I'll have to press F12 then Alt+S, navigate to saving location (probably aside blend file !) then choose a name and Oh wait!...  
