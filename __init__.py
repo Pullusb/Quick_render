@@ -22,7 +22,7 @@ bl_info = {
     "name": "Quick render",
     "description": "Quickly Render/openGL from view/cam and save image",
     "author": "Samuel Bernou",
-    "version": (1, 2, 1),
+    "version": (1, 2, 2),
     "blender": (2, 82, 0),
     "location": "3D viewport > sidebar (N) > View tab > Quick render",
     "warning": "",
@@ -34,7 +34,7 @@ import bpy
 import os, re
 from os import listdir
 from pathlib import Path
-from os.path import join, dirname, basename, exists, isfile, isdir, splitext, normpath
+from os.path import join, dirname, exists, splitext, normpath, abspath
 from time import strftime
 from sys import platform
 import subprocess
@@ -268,7 +268,7 @@ class QRD_OT_render_view(bpy.types.Operator):
             if not exists(dest):
                 os.mkdir(dest)
 
-        dest = bpy.path.abspath(dest)
+        dest = abspath(bpy.path.abspath(dest))
 
         name = context.scene.qrd_prop.filename
         if bpy.data.is_saved and context.scene.qrd_prop.use_blend_name:
@@ -287,14 +287,16 @@ class QRD_OT_render_view(bpy.types.Operator):
         if scn.qrd_prop.insert_frame:
             name = ensure_delimiter(name) + 'f' + str(scn.frame_current).zfill(4)
 
-        
-        fl = [splitext(i)[0] for i in listdir(dest)]
+        if Path(dest).exists():
+            fl = [splitext(i)[0] for i in listdir(dest)]
+        else:
+            fl = []
 
-        filename = name#original output name
+        filename = name # original output name
 
-        ct = 1#skip 01 and go direct to 02 (option to force always add count, even on first. dont like it, you may want to name each of your export...)
+        ct = 1 # skip 01 and go direct to 02 (option to force always add count, even on first. dont like it, you may want to name each of your export...)
             
-        if '#' in name:#padded
+        if '#' in name: # padded
             # always number this from the first
             filename = add_count(name, 1, pad = userpad)#first output name have number 1
 
@@ -466,30 +468,35 @@ class QRD_addon_pref(bpy.types.AddonPreferences):
             flow = layout.grid_flow(row_major=False, columns=0, even_columns=True, even_rows=False, align=False)
             layout = flow.column()
             
-            layout.prop(self, "placeholder")
-            layout.separator()
-            layout.prop(self, "padding")
-            layout.separator()
-            layout.prop(self, "mask_cams")
-            layout.separator()
-            layout.prop(self, "normalize")
-            layout.separator()
-            layout.prop(self, "timestring")
-            layout.label(text='Date format is defining how to write current time, exemples:')
-            # layout.label(text='')
-            layout.label(text='%Y-%m-%d_%H-%M-%S (default)')
-            layout.label(text='2020-03-02_23-19-55 (year-month-day_hour-min-seconds)')
-            layout.separator()
-            layout.label(text='%Y-%m-%d')
-            layout.label(text='2020-03-02 (year-month-day)')
-            layout.separator()
-            layout.label(text='%d-%H-%M-%S')
-            layout.label(text='02-23-19-55 (day-hours-minutes-seconds)')
-            layout.separator()
-            layout.label(text='%Y%m%d%H%M%S')
-            layout.label(text='20200302231955 (compacted year,month,day,hours,minutes,seconds)')
-            layout.separator()
-            layout.operator("wm.url_open", text="Link to more detail on time format").url = "https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes"
+            col = layout.column()
+            col.prop(self, "placeholder")
+            col.separator()
+            col.prop(self, "padding")
+            col.separator()
+            col.prop(self, "mask_cams")
+            col.separator()
+            col.prop(self, "normalize")
+            col.separator()
+            col.prop(self, "timestring")
+            col.separator()
+
+            box = layout.box()
+            col = box.column()
+            col.label(text='Date format is defining how to write current time, exemples:')
+            col.separator()
+            col.label(text='%Y-%m-%d_%H-%M-%S (default)')
+            col.label(text='2020-03-02_23-19-55 (year-month-day_hour-min-seconds)')
+            col.separator()
+            col.label(text='%Y-%m-%d')
+            col.label(text='2020-03-02 (year-month-day)')
+            col.separator()
+            col.label(text='%d-%H-%M-%S')
+            col.label(text='02-23-19-55 (day-hours-minutes-seconds)')
+            col.separator()
+            col.label(text='%Y%m%d%H%M%S')
+            col.label(text='20200302231955 (compacted year,month,day,hours,minutes,seconds)')
+            col.separator()
+            col.operator("wm.url_open", text="Link to more detail on time format").url = "https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes"
 
 
 class QRD_PGT_settings(bpy.types.PropertyGroup) :

@@ -1,5 +1,9 @@
 # changelog
 
+1.2.2 - 2021-07-24:
+
+- fix: problem if forlder is specified but not exists
+
 1.2.1 - 2021-07-24:
 - code: cleanup, scene properies to property group
 - code: created changelog file
