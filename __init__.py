@@ -22,11 +22,11 @@ bl_info = {
     "name": "Quick render",
     "description": "Quickly Render/openGL from view/cam and save image",
     "author": "Samuel Bernou",
-    "version": (1, 2, 0),
+    "version": (1, 2, 1),
     "blender": (2, 82, 0),
-    "location": "3D viewport > N bar > View tab > Quick render",
+    "location": "3D viewport > sidebar (N) > View tab > Quick render",
     "warning": "",
-    "wiki_url": "https://github.com/Pullusb/Quick_render",
+    "tracker_url": "https://github.com/Pullusb/Quick_render/issues/new",
     "category": "3D View" }
 
 
@@ -257,7 +257,7 @@ class QRD_OT_render_view(bpy.types.Operator):
         C = bpy.context
         scn = scene = context.scene
 
-        dest = context.scene.qrd_savepath
+        dest = context.scene.qrd_prop.savepath
         if not dest:
             foldername = 'quick_render'
             if bpy.data.is_saved:
@@ -270,21 +270,21 @@ class QRD_OT_render_view(bpy.types.Operator):
 
         dest = bpy.path.abspath(dest)
 
-        name = context.scene.qrd_filename
-        if bpy.data.is_saved and context.scene.qrd_use_blend_name:
+        name = context.scene.qrd_prop.filename
+        if bpy.data.is_saved and context.scene.qrd_prop.use_blend_name:
             name = Path(bpy.data.filepath).stem
 
         if pref.normalize:
             name = name.replace(' ', '_')
 
 
-        if not name and not scn.qrd_insert_date and not scn.qrd_insert_frame:
+        if not name and not scn.qrd_prop.insert_date and not scn.qrd_prop.insert_frame:
             name = 'view'
 
-        if scn.qrd_insert_date:
+        if scn.qrd_prop.insert_date:
             name = ensure_delimiter(name) + strftime(date_format)
 
-        if scn.qrd_insert_frame:
+        if scn.qrd_prop.insert_frame:
             name = ensure_delimiter(name) + 'f' + str(scn.frame_current).zfill(4)
 
         
@@ -360,7 +360,7 @@ class QRD_OT_open_export_folder(bpy.types.Operator):
     def execute(self, context):
         C = context
         scn = scene = context.scene
-        dest = context.scene.qrd_savepath
+        dest = context.scene.qrd_prop.savepath
         if not dest:
             foldername = 'quick_render'#define in user pref ?
             if bpy.data.is_saved:
@@ -403,17 +403,17 @@ class QRD_PT_quickrenderbuttons(bpy.types.Panel):
 
         #row = layout.split(align=True,percentage=0.5)
 
-        layout.prop(context.scene, 'qrd_savepath', text='Save Folder')
+        layout.prop(context.scene.qrd_prop, 'savepath', text='Save Folder')
         
         col = layout.column()
-        col.prop(context.scene, 'qrd_filename', text='Filename')
-        col.enabled = not context.scene.qrd_use_blend_name
+        col.prop(context.scene.qrd_prop, 'filename', text='File Name')
+        col.enabled = not context.scene.qrd_prop.use_blend_name
 
-        layout.prop(context.scene, 'qrd_use_blend_name')
+        layout.prop(context.scene.qrd_prop, 'use_blend_name')
 
         row = layout.row(align=False)
-        row.prop(context.scene, 'qrd_insert_date')
-        row.prop(context.scene, 'qrd_insert_frame')
+        row.prop(context.scene.qrd_prop, 'insert_date')
+        row.prop(context.scene.qrd_prop, 'insert_frame')
 
         layout.label(text='OpenGL render')
         row = layout.row(align=False)
@@ -492,31 +492,46 @@ class QRD_addon_pref(bpy.types.AddonPreferences):
             layout.operator("wm.url_open", text="Link to more detail on time format").url = "https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes"
 
 
+class QRD_PGT_settings(bpy.types.PropertyGroup) :
+
+    # (use template set in your user preferences)
+    filename : bpy.props.StringProperty(
+        description="The filename used for export. You can leave it empty\nYou can specify padding e.g: flashrender_###")
+
+    use_blend_name : bpy.props.BoolProperty(
+        name="Use Blend Name", default=False, description="Use current blend filename for export")
+
+    # change defaut name in user_preferences
+    savepath : bpy.props.StringProperty(
+        subtype='DIR_PATH', 
+        description="Export location, if not specify, create a 'quick_render' directory aside blend location")
+
+    insert_date : bpy.props.BoolProperty(
+        name="Insert Date", default=False, 
+        description="Insert the date as suffix in filename\ne.g.: beloved-cube_2020-02-11")
+
+    insert_frame : bpy.props.BoolProperty(
+        name="Insert Frame", default=False, 
+        description="Insert the frame number as suffix in filename\ne.g: beloved_cube_0250\n(or with date : beloved_cube_2020-02-11_0250)")
+
 ### register ===
 
 classes = (
+    QRD_PGT_settings,
     QRD_addon_pref,
     QRD_OT_render_view,
     QRD_PT_quickrenderbuttons,
     QRD_OT_open_export_folder
 )
 def register():
-    #add one for path
-    bpy.types.Scene.qrd_filename = bpy.props.StringProperty(description="The filename used for export. You can leave it empty\nYou can specify padding e.g: flashrender_###")#(use template set in your user preferences)
-    bpy.types.Scene.qrd_use_blend_name = bpy.props.BoolProperty(name="Use Blend Name", default=False, description="Use current blend filename for export")
-    bpy.types.Scene.qrd_savepath = bpy.props.StringProperty(subtype='DIR_PATH', description="Export location, if not specify, create a 'quick_render' directory aside blend location")#(change defaut name in user_prefernece)
-    bpy.types.Scene.qrd_insert_date = bpy.props.BoolProperty(name="Insert Date", default=False, description="Insert the date as suffix in filename\ne.g.: beloved-cube_2020-02-11")
-    bpy.types.Scene.qrd_insert_frame = bpy.props.BoolProperty(name="Insert Frame", default=False, description="Insert the frame number as suffix in filename\ne.g: beloved_cube_0250\n(or with date : beloved_cube_2020-02-11_0250)")
     for cls in classes:
         bpy.utils.register_class(cls)
+    bpy.types.Scene.qrd_prop = bpy.props.PointerProperty(type = QRD_PGT_settings)
 
 def unregister():
     for cls in classes:
         bpy.utils.unregister_class(cls)
-    del bpy.types.Scene.qrd_filename
-    del bpy.types.Scene.qrd_savepath
-    del bpy.types.Scene.qrd_insert_date
-    del bpy.types.Scene.qrd_insert_frame
+    del bpy.types.Scene.qrd_prop
 
 if __name__ == "__main__":
     register()
