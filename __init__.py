@@ -1,21 +1,8 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 '''
 Copyright (C) 2020 Samuel Bernou
 bernou.samuel@gmail.com
-
-Created by Samuel Bernou
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 bl_info = {
@@ -254,7 +241,6 @@ class QRD_OT_render_view(bpy.types.Operator):
         userpad = pref.padding
         mask_cams = pref.mask_cams
 
-        C = bpy.context
         scn = scene = context.scene
 
         dest = context.scene.qrd_prop.savepath
@@ -343,9 +329,18 @@ class QRD_OT_render_view(bpy.types.Operator):
         elif self.rendermode == 3:
             bpy.ops.render.render(animation=False, write_still=True)#, layer="", scene=""
         
-        qc_viewlayer_col = C.scene.view_layers['View Layer'].layer_collection.children.get('quick_cams')
+        vl = context.view_layer
+        # vl = scn.view_layers.get('ViewLayer')
+        # if not vl:
+        #     vl = scn.view_layers.get('View Layer')
+        # if not vl:
+        #     vl = scn.view_layers[0]
+
+        qc_viewlayer_col = vl.layer_collection.children.get('quick_cams')
         if mask_cams:
-            if qc_viewlayer_col: qc_viewlayer_col.exclude = True
+            if qc_viewlayer_col:
+                qc_viewlayer_col.exclude = True
+       
         #reset
         scn.render.filepath = org
 
@@ -360,7 +355,6 @@ class QRD_OT_open_export_folder(bpy.types.Operator):
     rendermode : bpy.props.IntProperty()
 
     def execute(self, context):
-        C = context
         scn = scene = context.scene
         dest = context.scene.qrd_prop.savepath
         if not dest:
