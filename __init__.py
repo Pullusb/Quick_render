@@ -9,7 +9,7 @@ bl_info = {
     "name": "Quick render",
     "description": "Quickly Render/openGL from view/cam and save image",
     "author": "Samuel Bernou",
-    "version": (1, 2, 2),
+    "version": (1, 2, 3),
     "blender": (2, 82, 0),
     "location": "3D viewport > sidebar (N) > View tab > Quick render",
     "warning": "",
